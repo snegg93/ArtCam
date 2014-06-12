@@ -1,0 +1,86 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/LinearLayout1"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background"
+    android:orientation="vertical"
+    tools:context="${packageName}.${activityClass}" >
+
+    <ImageView
+        android:id="@+id/mainLogoImageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:scaleType="fitStart"
+        android:src="@drawable/logo" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1" >
+
+            <ImageView
+                android:id="@+id/mainLeftImageView"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:scaleType="fitEnd"
+                android:src="@drawable/main_left" />
+
+            <ImageButton
+                android:id="@+id/faceCollectionButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/mainLeftImageView"
+                android:layout_alignLeft="@id/mainLeftImageView"
+                android:layout_marginBottom="59dp"
+                android:layout_marginLeft="30dp"
+                android:src="@drawable/ic_launcher"
+                android:onClick="onFaceCollectionClick" />
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.2"
+            android:orientation="vertical" >
+
+            <ImageButton
+                android:id="@+id/ImageButton02"
+                android:layout_width="fill_parent"
+                android:layout_height="50dp"
+                android:src="@drawable/main_button1" />
+
+            <ImageButton
+                android:id="@+id/ImageButton01"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/main_button1" />
+
+            <ImageButton
+                android:id="@+id/exitButton"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:onClick="onExitClick"
+                android:scaleType="centerCrop"
+                android:src="@drawable/main_button1" />
+
+            <ImageButton
+                android:id="@+id/galleryButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/background"
+                android:scaleType="fitEnd"
+                android:src="@drawable/main_right" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>
