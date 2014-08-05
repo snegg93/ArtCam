@@ -1,0 +1,117 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:layout_margin="15dp"
+              android:orientation="vertical"
+              tools:context="org.artcam.android.FaceEditActivity.Fragment2"
+              android:id="@+id/fr2_fe_root"
+              android:background="@drawable/background">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:id="@+id/fr2_fe_face_container"
+        >
+
+    </FrameLayout>
+
+    <SlidingDrawer
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:content="@+id/fr2_fe_drawer_content"
+        android:handle="@+id/fr2_fe_drawer_handle"
+        android:id="@+id/fr2_fe_drawer"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_alignParentBottom="true">
+
+        <FrameLayout
+            android:id="@+id/fr2_fe_drawer_content"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:focusable="true"
+            android:background="@drawable/background">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_gravity="center_horizontal|bottom">
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:id="@+id/fr2_fe_drawer_tabs">
+
+                    <Button
+                        style="?android:attr/buttonStyleSmall"
+                        android:layout_width="100dp"
+                        android:layout_height="match_parent"
+                        android:text="1"
+                        android:tag="1"
+                        />
+
+                    <Button
+                        style="?android:attr/buttonStyleSmall"
+                        android:layout_width="100dp"
+                        android:layout_height="match_parent"
+                        android:text="2"
+                        android:tag="2"
+                        />
+
+                    <Button
+                        style="?android:attr/buttonStyleSmall"
+                        android:layout_width="100dp"
+                        android:layout_height="match_parent"
+                        android:text="3"
+                        android:tag="3"
+                        />
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <ImageSwitcher
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:id="@+id/fr2_fe_isw1"/>
+                </FrameLayout>
+            </LinearLayout>
+        </FrameLayout>
+
+        <View
+            android:id="@+id/fr2_fe_drawer_handle"
+            android:layout_height="0dp"
+            android:layout_width="0dp" />
+    </SlidingDrawer>
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:id="@+id/fr2_fe_but1"
+        android:tag="101"
+        android:layout_marginTop="72dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:background="@drawable/button"
+        />
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:id="@+id/fr2_fe_but2"
+        android:tag="102"
+        android:layout_below="@+id/fr2_fe_but1"
+        android:layout_alignLeft="@+id/fr2_fe_but1"
+        android:layout_marginTop="15dp"
+        android:enabled="true"
+        android:clickable="true"
+        android:background="@drawable/button" />
+
+</RelativeLayout>

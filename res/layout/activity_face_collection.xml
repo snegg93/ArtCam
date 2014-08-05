@@ -2,7 +2,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="${packageName}.${activityClass}" >
+    tools:context="${packageName}.${activityClass}"
+    android:background="@drawable/background">
 
     <Button
         android:id="@+id/button1"
@@ -14,12 +15,12 @@
         android:onClick="onBackButtonClick"/>
 	
         <LinearLayout
-        android:id="@+id/placementLayout"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:orientation="vertical" >
+            android:id="@+id/placementLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:orientation="vertical" >
 
     </LinearLayout>
 
@@ -52,98 +53,5 @@
         android:layout_toLeftOf="@id/button2"
         android:text="Button"
         android:onClick="onOtherClick" />
-
-    <SeekBar
-        android:id="@+id/seekBar1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginTop="64dp"
-        android:max="200"
-        android:progress="200"
-        android:tag="0" />
-
-    <SeekBar
-        android:id="@+id/seekBar2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/seekBar1"
-        android:max="200"
-        android:progress="100"
-        android:tag="1" />
-
-    <SeekBar
-        android:id="@+id/seekBar3"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/seekBar2"
-        android:max="200"
-        android:progress="100"
-        android:tag="2" />
-
-    <SeekBar
-        android:id="@+id/seekBar4"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/seekBar3"
-        android:layout_marginTop="33dp"
-        android:max="200"
-        android:progress="100"
-        android:tag="5" />
-
-    <SeekBar
-        android:id="@+id/seekBar5"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/seekBar4"
-        android:max="200"
-        android:progress="200"
-        android:tag="6" />
-
-    <SeekBar
-        android:id="@+id/seekBar6"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/seekBar5"
-        android:max="200"
-        android:progress="100"
-        android:tag="7" />
-
-    <SeekBar
-        android:id="@+id/seekBar7"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/seekBar6"
-        android:layout_marginTop="25dp"
-        android:max="200"
-        android:progress="100"
-        android:tag="10" />
-
-    <SeekBar
-        android:id="@+id/seekBar8"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/seekBar7"
-        android:max="200"
-        android:progress="100"
-        android:tag="11" />
-
-    <SeekBar
-        android:id="@+id/seekBar9"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/seekBar8"
-        android:max="200"
-        android:progress="200"
-        android:tag="12" />
 
 </RelativeLayout>

@@ -23,62 +23,21 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.SeekBar;
 
 public class FaceCollection extends Activity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_face_collection);
-		SeekBar.OnSeekBarChangeListener lst = new SeekBar.OnSeekBarChangeListener(){
-
-		    @Override
-		    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-		    	int t = Integer.valueOf(seekBar.getTag().toString());
-		    	mat[t] = progress  / 100.f - 1.f;
-
-		        ColorMatrix cm = new ColorMatrix();
-				cm.set(mat);
-				ColorMatrixColorFilter cf = new ColorMatrixColorFilter(cm);			
-				img.setColorFilter(cf);
-		    }
-
-		    @Override
-		    public void onStartTrackingTouch(SeekBar seekBar) {
-
-		    }
-
-		    @Override
-		    public void onStopTrackingTouch(SeekBar seekBar) {
-
-		    }
-		};
-		SeekBar b;
-		b = (SeekBar) findViewById(R.id.seekBar1);
-		b.setOnSeekBarChangeListener(lst);
-		b = (SeekBar) findViewById(R.id.seekBar2);
-		b.setOnSeekBarChangeListener(lst);
-		b = (SeekBar) findViewById(R.id.seekBar3);
-		b.setOnSeekBarChangeListener(lst);
-		b = (SeekBar) findViewById(R.id.seekBar4);
-		b.setOnSeekBarChangeListener(lst);
-		b = (SeekBar) findViewById(R.id.seekBar5);
-		b.setOnSeekBarChangeListener(lst);
-		b = (SeekBar) findViewById(R.id.seekBar6);
-		b.setOnSeekBarChangeListener(lst);
-		b = (SeekBar) findViewById(R.id.seekBar7);
-		b.setOnSeekBarChangeListener(lst);
-		b = (SeekBar) findViewById(R.id.seekBar8);
-		b.setOnSeekBarChangeListener(lst);
-		b = (SeekBar) findViewById(R.id.seekBar9);
-		b.setOnSeekBarChangeListener(lst);
+		setContentView(R.layout.activity_face_collection);		
 	}
 	
 	public void onBackButtonClick(View v) {
@@ -124,9 +83,9 @@ public class FaceCollection extends Activity {
 		}
 	}
 	private float mat[] = {
-			1, 0, 0, 0, 0,
-			0, 1, 0, 0, 0,
-			0, 0, 1, 0, 0,
+			0.8f, 0.8f, 0.8f, 0, 0,
+			0.8f, 0.8f, 0.8f, 0, 0,
+			0.8f, 0.8f, 0.8f, 0, 0,
 			0, 0, 0, 1, 0
 	};
 	public void addFace() {
@@ -139,7 +98,7 @@ public class FaceCollection extends Activity {
 		cm.set(mat);
 		ColorMatrixColorFilter cf = new ColorMatrixColorFilter(cm);			
 		img.setColorFilter(cf);
-		DetectFace r = new DetectFace();
+		//DetectFace r = new DetectFace();
 		File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
 	              Environment.DIRECTORY_PICTURES), "ArtCam");
 	    if (! mediaStorageDir.exists()){
@@ -149,23 +108,38 @@ public class FaceCollection extends Activity {
 	        }
 	    }
 	    File f = new File(mediaStorageDir.getPath() + File.separator + "IMG_.jpg");
-		r.fileUri = Uri.fromFile(f);
-		r.img = img;
-		ProgressBar b = (ProgressBar)findViewById(R.id.progressBar1);
+		//r.fileUri = Uri.fromFile(f);
+		//r.img = img;
+		//ProgressBar b = (ProgressBar)findViewById(R.id.progressBar1);
         //b.setVisibility(View.VISIBLE);  
 		//r.execute("");
         img.setImageURI(Uri.fromFile(f));
+        img.filePath = Uri.fromFile(f).getPath();
 	}
 	
 	
-	public class FaceImageView extends ImageView {
+	public class FaceImageView extends ImageView implements OnTouchListener  {
 		public FaceImageView(Context c) {
 			super(c);
-		}		
+			this.setOnTouchListener(this);
+		}
+		
 		@Override
 		protected void onDraw(Canvas c) {
 			super.onDraw(c);			
 		}
+		
+		@Override
+	    public boolean onTouch(View view, MotionEvent event) {
+			if (view == this) {
+				Intent i = new Intent(getContext(), FaceEditActivity.class);
+				i.putExtra("BitmapFilePath", filePath);
+				startActivity(i);
+			}
+	        return false;
+	    }
+		
+		public String filePath;
 	}
 	
 	public class DetectFace extends AsyncTask<String, Void, Void> {
@@ -202,8 +176,6 @@ public class FaceCollection extends Activity {
 		        bmp.compress(Bitmap.CompressFormat.PNG, 0, fs);
 		        fs.flush();
 		        fs.close();
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

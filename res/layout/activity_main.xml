@@ -19,13 +19,13 @@
         android:layout_height="wrap_content" >
 
         <RelativeLayout
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1" >
 
             <ImageView
                 android:id="@+id/mainLeftImageView"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:scaleType="fitEnd"
@@ -33,14 +33,14 @@
 
             <ImageButton
                 android:id="@+id/faceCollectionButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignBottom="@id/mainLeftImageView"
-                android:layout_alignLeft="@id/mainLeftImageView"
-                android:layout_marginBottom="59dp"
-                android:layout_marginLeft="30dp"
-                android:src="@drawable/ic_launcher"
-                android:onClick="onFaceCollectionClick" />
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:onClick="onFaceCollectionClick"
+                android:background="@drawable/button"
+                android:layout_marginLeft="42dp"
+                android:layout_marginBottom="62dp"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="true"/>
 
         </RelativeLayout>
 
@@ -50,26 +50,30 @@
             android:layout_weight="1.2"
             android:orientation="vertical" >
 
-            <ImageButton
+            <Button
                 android:id="@+id/ImageButton02"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:src="@drawable/main_button1" />
+                android:background="@drawable/button"
+                android:layout_marginBottom="5dp"/>
 
-            <ImageButton
+            <Button
                 android:id="@+id/ImageButton01"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:scaleType="fitXY"
-                android:src="@drawable/main_button1" />
+                android:background="@drawable/button"
+                android:layout_marginBottom="5dp"/>
 
-            <ImageButton
+            <Button
                 android:id="@+id/exitButton"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:onClick="onExitClick"
-                android:scaleType="centerCrop"
-                android:src="@drawable/main_button1" />
+                android:background="@drawable/button"
+                android:text="Exit"
+                android:textSize="30sp"
+                android:typeface="monospace"/>
 
             <ImageButton
                 android:id="@+id/galleryButton"
