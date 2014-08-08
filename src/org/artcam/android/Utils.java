@@ -1,21 +1,40 @@
 package org.artcam.android;
 
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentSender;
 import android.graphics.*;
+import android.os.Bundle;
+import android.widget.Toast;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.plus.Plus;
 
 import java.util.Vector;
 
 public class Utils {
 
     private static Utils single = null;
+    private Session session;
 
     private Utils() {
     }
 
     public static Utils getInstance() {
-        if (single == null)
+        if (single == null) {
             single = new Utils();
+        }
         return single;
+    }
+
+    public Session getSession() {
+        return this.session;
+    }
+
+    public void setSession(Session s) {
+        session = s;
     }
 
     public static float getDistance(PointF first, PointF second) {
@@ -37,13 +56,15 @@ public class Utils {
             return instance;
         }
 
-        public void addFace(Face f) {
+        public int addFace(Face f) {
             faces.add(f);
+            return faces.size() - 1;
         }
 
         public Face getFace(int i) {
             return faces.get(i);
         }
+        public int getId(Face f) { return faces.indexOf(f);}
 
         public void removeFace(int i) {
             faces.remove(i);
@@ -70,6 +91,10 @@ public class Utils {
             }
             return null;
         }
+
+        public int getCount() {
+            return faces.size();
+        }
     }
 
     public static class FaceFactory {
@@ -87,6 +112,77 @@ public class Utils {
 
         public static Face create(Bitmap bmp, Point eyePoint1, Point eyePoint2, Point mPoint) {
             return new Face(bmp, new PointF(eyePoint1), new PointF(eyePoint2), new PointF(mPoint));
+        }
+    }
+
+    public static class Session implements
+            GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+
+        private GoogleApiClient googleApiClient;
+        private boolean intentInProgress;
+        private static final int RC_SIGN_IN = 0;
+        private Activity activity;
+        private boolean needResolution;
+
+        public Session(Activity a) {
+            needResolution = false;
+            activity = a;
+            GoogleApiClient.Builder b = new GoogleApiClient.Builder(a);
+            b.addConnectionCallbacks(this);
+            b.addOnConnectionFailedListener(this);
+            b.addApi(Plus.API, Plus.PlusOptions.builder().build());
+            b.addScope(Plus.SCOPE_PLUS_LOGIN);
+            googleApiClient = b.build();
+            googleApiClient.connect();
+        }
+
+        public void activityResult(int requestCode) {
+            if (requestCode == RC_SIGN_IN) {
+                intentInProgress = false;
+
+                if (!googleApiClient.isConnecting()) {
+                    googleApiClient.connect();
+                }
+            }
+        }
+
+        public void close() {
+            if (googleApiClient.isConnected()) {
+                googleApiClient.disconnect();
+            }
+        }
+
+        public void connect() {
+            needResolution = true;
+            googleApiClient.connect();
+        }
+
+        public void onConnectionFailed(ConnectionResult result) {
+            if (!intentInProgress && result.hasResolution()) {
+                try {
+                    Toast.makeText(activity, "Cant sign in", Toast.LENGTH_SHORT).show();
+                    if (needResolution) {
+                        needResolution = false;
+                        intentInProgress = true;
+                        result.startResolutionForResult(activity, RC_SIGN_IN);
+                    }
+                } catch (IntentSender.SendIntentException e) {
+                    // The intent was canceled before it was sent.  Return to the default
+                    // state and attempt to connect to get an updated ConnectionResult.
+                    intentInProgress = false;
+                    //googleApiClient.connect();
+                }
+            }
+        }
+
+
+        public void onConnected(Bundle connectionHint) {
+            Toast.makeText(activity, "Signed in Google+ with " + Plus.AccountApi.getAccountName(googleApiClient), Toast.LENGTH_SHORT).show();
+            needResolution = false;
+        }
+
+        public void onConnectionSuspended(int cause) {
+            googleApiClient.connect();
         }
     }
 }

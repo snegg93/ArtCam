@@ -1,15 +1,18 @@
 <component name="ArtifactManager">
-  <artifact type="apk" name="ArtCam">
+  <artifact type="apk" build-on-make="true" name="ArtCam">
     <output-path>$PROJECT_DIR$/out/artifacts/ArtCam</output-path>
     <properties id="android-properties">
       <options>
-        <option name="keyStoreUrl" value="file://" />
+        <option name="keyAlias" value="androiddebugkey" />
+        <option name="keyPassword" value="YW5kcm9pZA==" />
+        <option name="keyStorePassword" value="YW5kcm9pZA==" />
+        <option name="keyStoreUrl" value="file://$USER_HOME$/.android/debug.keystore" />
         <option name="proGuardCfgFiles">
           <list>
             <option value="file://%MODULE_SDK_HOME%/tools/proguard/proguard-android.txt" />
           </list>
         </option>
-        <option name="signingMode" value="DEBUG" />
+        <option name="signingMode" value="DEBUG_WITH_CUSTOM_CERTIFICATE" />
       </options>
     </properties>
     <root id="archive" name="ArtCam.apk">

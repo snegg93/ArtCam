@@ -3,9 +3,10 @@
 
     <string name="app_name">ArtCam</string>
     <string name="title_activity_main">ArtCam</string>
-    <string name="hello_world">Hello world!</string>
     <string name="title_activity_face_collection">Face Collection</string>
     <string name="title_activity_face_edit">Face edit</string>
     <string name="action_settings">Settings</string>
+    <string name="exitButtonText">Exit</string>
+    <string name="backButtonText">Back</string>
 
 </resources>

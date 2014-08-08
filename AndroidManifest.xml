@@ -34,7 +34,7 @@
             android:name="org.artcam.android.MainActivity"
             android:configChanges="orientation"
             android:label="@string/title_activity_main"
-            android:screenOrientation="portrait"
+
             android:theme="@android:style/Theme.Black.NoTitleBar" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

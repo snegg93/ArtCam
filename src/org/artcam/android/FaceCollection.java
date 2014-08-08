@@ -1,7 +1,6 @@
 package org.artcam.android;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -12,9 +11,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.ColorMatrix;
-import android.graphics.ColorMatrixColorFilter;
 import android.graphics.PointF;
 import android.media.FaceDetector;
 import android.net.Uri;
@@ -82,23 +78,13 @@ public class FaceCollection extends Activity {
 			addFace();
 		}
 	}
-	private float mat[] = {
-			0.8f, 0.8f, 0.8f, 0, 0,
-			0.8f, 0.8f, 0.8f, 0, 0,
-			0.8f, 0.8f, 0.8f, 0, 0,
-			0, 0, 0, 1, 0
-	};
+
 	public void addFace() {
 		img = new FaceImageView(this);
 		img.setLayoutParams(new LayoutParams(100, 100));
 		LinearLayout l = (LinearLayout)findViewById(R.id.placementLayout);
         img.setScaleType(ScaleType.FIT_START);
 		l.addView(img);
-        ColorMatrix cm = new ColorMatrix();
-		cm.set(mat);
-		ColorMatrixColorFilter cf = new ColorMatrixColorFilter(cm);			
-		img.setColorFilter(cf);
-		//DetectFace r = new DetectFace();
 		File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
 	              Environment.DIRECTORY_PICTURES), "ArtCam");
 	    if (! mediaStorageDir.exists()){
@@ -108,14 +94,37 @@ public class FaceCollection extends Activity {
 	        }
 	    }
 	    File f = new File(mediaStorageDir.getPath() + File.separator + "IMG_.jpg");
-		//r.fileUri = Uri.fromFile(f);
-		//r.img = img;
-		//ProgressBar b = (ProgressBar)findViewById(R.id.progressBar1);
-        //b.setVisibility(View.VISIBLE);  
-		//r.execute("");
-        img.setImageURI(Uri.fromFile(f));
-        img.filePath = Uri.fromFile(f).getPath();
+        Face face = Utils.FaceFactory.create();
+        img.id = Utils.Faces.getInstance().addFace(face);
+        face.setOrigBitmap(BitmapFactory.decodeFile(f.getAbsolutePath()));
+        img.setImageBitmap(face.getOrigBitmap());
 	}
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Utils.Faces f = Utils.Faces.getInstance();
+        LinearLayout l = (LinearLayout)findViewById(R.id.placementLayout);
+        l.removeAllViews();
+
+        for (int i = 0; i < f.getCount(); ++i)
+        {
+            img = new FaceImageView(this);
+            img.setLayoutParams(new LayoutParams(100, 100));
+            img.setScaleType(ScaleType.FIT_START);
+            img.setImageBitmap(f.getFace(i).getProcessedBitmap());
+            img.id = i;
+
+            l.addView(img);
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        LinearLayout l = (LinearLayout)findViewById(R.id.placementLayout);
+        l.removeAllViews();
+    }
 	
 	
 	public class FaceImageView extends ImageView implements OnTouchListener  {
@@ -123,23 +132,18 @@ public class FaceCollection extends Activity {
 			super(c);
 			this.setOnTouchListener(this);
 		}
-		
-		@Override
-		protected void onDraw(Canvas c) {
-			super.onDraw(c);			
-		}
-		
+
 		@Override
 	    public boolean onTouch(View view, MotionEvent event) {
 			if (view == this) {
 				Intent i = new Intent(getContext(), FaceEditActivity.class);
-				i.putExtra("BitmapFilePath", filePath);
+				i.putExtra("FaceID", id);
 				startActivity(i);
 			}
 	        return false;
 	    }
 		
-		public String filePath;
+		public int id;
 	}
 	
 	public class DetectFace extends AsyncTask<String, Void, Void> {

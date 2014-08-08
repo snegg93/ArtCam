@@ -2,7 +2,6 @@ package org.artcam.android;
 
 import android.content.Context;
 import android.graphics.*;
-import android.net.Uri;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -11,8 +10,6 @@ import android.widget.ImageView;
 public class FaceView extends ImageView implements View.OnTouchListener {
     public FaceView(Context c) {
         super(c);
-        face = Utils.FaceFactory.create();
-        Utils.Faces.getInstance().addFace(face);
         action = -1;
         setOnTouchListener(this);
         paint = new Paint();
@@ -24,33 +21,54 @@ public class FaceView extends ImageView implements View.OnTouchListener {
         bmp = BitmapFactory.decodeResource(getResources(), R.drawable.eyes);
     }
 
-    @Override
-    public void setImageURI(Uri uri) {
-        super.setImageURI(uri);
-        face.setBitmap(BitmapFactory.decodeFile(uri.getPath()));
+    public void setFaceBitmap(Bitmap bmp) {
+        face.setOrigBitmap(bmp);
+        setImageBitmap(face.getOrigBitmap());
     }
 
-    @Override
-    public void setImageBitmap(Bitmap bmp) {
-        super.setImageBitmap(bmp);
-        face.setBitmap(bmp);
+    public void setFaceId(int id) {
+        if (id < 0 || Utils.Faces.getInstance().getFace(id) == null) {
+            face = Utils.FaceFactory.create();
+            Utils.Faces.getInstance().addFace(face);
+            setFaceBitmap(Bitmap.createBitmap(0, 0, Bitmap.Config.ARGB_8888));
+        } else {
+            face = Utils.Faces.getInstance().getFace(id);
+            setImageBitmap(face.getProcessedBitmap());
+        }
     }
 
     @Override
     public void onDraw(Canvas c) {
-        super.onDraw(c);
-        c.save();
-        Matrix m = getImageMatrix();
-        PointF temp = face.getEyeLPoint(m);
-        Point p = new Point(Math.round(temp.x), Math.round(temp.y)) ;
-        c.drawBitmap(bmp, new Rect(0, 0, 24, 24), new Rect(p.x - 12, p.y - 12, p.x + 12, p.y +12), null);
-        temp = face.getEyeRPoint(m);
-        p = new Point(Math.round(temp.x), Math.round(temp.y)) ;
-        c.drawBitmap(bmp, new Rect(24, 0, 48, 24), new Rect(p.x - 12, p.y - 12, p.x + 12, p.y +12), null);
-        temp = face.getMouthPoint(m);
-        p = new Point(Math.round(temp.x), Math.round(temp.y)) ;
-        c.drawBitmap(bmp, new Rect(0, 24, 48, 48), new Rect(p.x - 24, p.y - 12, p.x + 24, p.y +12), null);
-        c.restore();
+        if (face.getState() == Face.ProcessState.CREATED) {
+            super.onDraw(c);
+            c.save();
+            Matrix m = getImageMatrix();
+            PointF temp = face.getEyeLPoint(m);
+            Point p = new Point(Math.round(temp.x), Math.round(temp.y));
+            c.drawBitmap(bmp, new Rect(0, 0, 24, 24), new Rect(p.x - 12, p.y - 12, p.x + 12, p.y + 12), null);
+            temp = face.getEyeRPoint(m);
+            p = new Point(Math.round(temp.x), Math.round(temp.y));
+            c.drawBitmap(bmp, new Rect(24, 0, 48, 24), new Rect(p.x - 12, p.y - 12, p.x + 12, p.y + 12), null);
+            temp = face.getMouthPoint(m);
+            p = new Point(Math.round(temp.x), Math.round(temp.y));
+            c.drawBitmap(bmp, new Rect(0, 24, 48, 48), new Rect(p.x - 24, p.y - 12, p.x + 24, p.y + 12), null);
+            c.restore();
+        } else if (face.getState() == Face.ProcessState.PROCESSED) {
+            super.onDraw(c);
+        }
+    }
+
+    public void processFace() {
+        face.process();
+        setImageBitmap(face.getProcessedBitmap());
+    }
+
+    public void setBrightness(int b) {
+        face.setBrightness(b / 100.f);
+        setImageBitmap(face.getProcessedBitmap());
+    }
+    public int getBrightness() {
+        return Math.round(face.getBrightness() * 100);
     }
 
     public boolean onTouch(View view, MotionEvent ev) {
