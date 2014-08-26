@@ -80,11 +80,6 @@ public class FaceCollection extends Activity {
 	}
 
 	public void addFace() {
-		img = new FaceImageView(this);
-		img.setLayoutParams(new LayoutParams(100, 100));
-		LinearLayout l = (LinearLayout)findViewById(R.id.placementLayout);
-        img.setScaleType(ScaleType.FIT_START);
-		l.addView(img);
 		File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
 	              Environment.DIRECTORY_PICTURES), "ArtCam");
 	    if (! mediaStorageDir.exists()){
@@ -93,6 +88,11 @@ public class FaceCollection extends Activity {
 	            return;
 	        }
 	    }
+        img = new FaceImageView(this);
+        img.setLayoutParams(new LayoutParams(100, 100));
+        LinearLayout l = (LinearLayout)findViewById(R.id.placementLayout);
+        img.setScaleType(ScaleType.FIT_START);
+        l.addView(img);
 	    File f = new File(mediaStorageDir.getPath() + File.separator + "IMG_.jpg");
         Face face = Utils.FaceFactory.create();
         img.id = Utils.Faces.getInstance().addFace(face);

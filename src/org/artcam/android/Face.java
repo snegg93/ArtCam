@@ -2,9 +2,13 @@ package org.artcam.android;
 
 import android.graphics.*;
 
+import java.util.Vector;
+
 public class Face {
 
     public enum ProcessState {CREATED, PROCESSED, DECORATED}
+    private static final int OVERLAYS_NUM = 1;
+    public static final int ERASER_OVERLAY = 0;
 
     public Face(Bitmap bmp, PointF eyePoint1, PointF eyePoint2, PointF mPoint) {
         setOrigBitmap(bmp);
@@ -15,6 +19,9 @@ public class Face {
         processedChanged = false;
         processedBitmap = null;
         brightness = 0.8f;
+        overlays = new Vector<>();
+        for (int i = 0; i < OVERLAYS_NUM; ++i)
+            overlays.add(null);
     }
 
 
@@ -175,6 +182,10 @@ public class Face {
             paint.setColorFilter(new ColorMatrixColorFilter(colorMatrix));
             c.drawBitmap(origBitmap, 0, 0, paint);
             c.restore();
+            for (int i = 0; i < overlays.size(); ++i) {
+                if (overlays.elementAt(i) != null && !overlays.elementAt(i).isRecycled())
+                    c.drawBitmap(overlays.elementAt(i), 0, 0, paint);
+            }
             processedChanged = false;
             return processedBitmap;
         }
@@ -192,6 +203,20 @@ public class Face {
         return state;
     }
 
+    public void setOverlay(int num, Bitmap bmp) {
+        if (num < overlays.size()) {
+            if (overlays.elementAt(num) != null && !overlays.elementAt(num).isRecycled()) {
+                overlays.elementAt(num).recycle();
+                overlays.setElementAt(null, num);
+            }
+            overlays.setElementAt(bmp.copy(Bitmap.Config.ARGB_8888, false), num);
+            processedChanged = true;
+        }
+    }
+    public Bitmap getOverlay(int num) {
+        return overlays.elementAt(num);
+    }
+
     private Bitmap origBitmap, processedBitmap;
     private RectF faceRect;
     private PointF eyeLPoint, eyeRPoint, mouthPoint;
@@ -200,4 +225,5 @@ public class Face {
     private boolean processedChanged;
     private float angle;
     private float brightness;
+    private Vector<Bitmap> overlays;
 }
