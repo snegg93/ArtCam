@@ -8,5 +8,6 @@
     <string name="action_settings">Settings</string>
     <string name="exitButtonText">Exit</string>
     <string name="backButtonText">Back</string>
+    <string name="settingsButtonText">Settings</string>
 
 </resources>

@@ -3,9 +3,9 @@ package org.artcam.android;
 import android.content.Context;
 import android.widget.ImageView;
 
-class DecoratedFaceView extends ImageView
+class DressedFaceView extends ImageView
 {
-    public DecoratedFaceView (Context c) {
+    public DressedFaceView(Context c) {
         super(c);
         setScaleType(ScaleType.FIT_START);
     }

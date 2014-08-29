@@ -21,39 +21,22 @@
         android:layout_height="wrap_content"
         android:layout_weight="1.2">
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1.8"
-            android:paddingRight="5dp">
-
-            <ImageView
-                android:id="@+id/mainLeftImageView"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:scaleType="fitEnd"
-                android:src="@drawable/main_left" />
-
-            <ImageButton
-                android:id="@+id/faceCollectionButton"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:onClick="onFaceCollectionClick"
-                android:background="@drawable/button"
-                android:layout_alignParentBottom="false"
-                android:layout_alignParentLeft="false"
-                android:layout_alignLeft="@+id/mainLeftImageView"
-                android:layout_alignTop="@+id/mainLeftImageView"
-                android:layout_marginLeft="10dp"
-                android:layout_marginTop="150dp"/>
-
-        </RelativeLayout>
+        <ImageButton
+            android:id="@+id/faceCollectionButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onFaceCollectionClick"
+            android:background="@drawable/button"
+            android:layout_alignParentBottom="false"
+            android:layout_alignParentLeft="false"
+            android:src="@drawable/main_left"
+            android:scaleType="fitEnd"
+            android:layout_weight="1.0"/>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1.2"
+            android:layout_weight="2"
             android:orientation="vertical"
             android:gravity="center_vertical">
 
@@ -70,7 +53,10 @@
                 android:layout_height="50dp"
                 android:scaleType="fitXY"
                 android:background="@drawable/button"
-                android:layout_marginBottom="5dp"/>
+                android:layout_marginBottom="5dp"
+                android:onClick="onSettingsClick"
+                android:text="@string/settingsButtonText"
+                android:textSize="30sp"/>
 
             <Button
                 android:id="@+id/exitButton"
@@ -99,10 +85,10 @@
             android:id="@+id/galleryButton"
             android:layout_width="wrap_content"
             android:layout_height="fill_parent"
-            android:background="@drawable/background"
+            android:background="@drawable/button"
             android:scaleType="fitEnd"
             android:src="@drawable/main_right"
-            android:layout_weight="1"
+            android:layout_weight="0.6"
             android:paddingLeft="5dp"/>
 
     </LinearLayout>

@@ -4,5 +4,6 @@
     <string name="action_settings">Настройки</string>
     <string name="exitButtonText">Выход</string>
     <string name="backButtonText">Назад</string>
+    <string name="settingsButtonText">Настройки</string>
 
 </resources>

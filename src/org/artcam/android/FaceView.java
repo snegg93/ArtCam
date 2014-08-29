@@ -7,7 +7,17 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 
-public class FaceView extends ImageView implements View.OnTouchListener {
+public class FaceView extends ImageView implements View.OnTouchListener, Utils.FaceChangedEventListened {
+
+    @Override
+    public void onProcessedChanged() {
+        setImageBitmap(face.getProcessedBitmap());
+    }
+
+    @Override
+    public void onDressedChanged() {
+
+    }
 
     public static enum EditState {EYES, PROCESSED, ERASER}
 
@@ -68,9 +78,11 @@ public class FaceView extends ImageView implements View.OnTouchListener {
             Utils.Faces.getInstance().addFace(face);
             setFaceBitmap(Bitmap.createBitmap(0, 0, Bitmap.Config.ARGB_8888));
             setEditState(EditState.EYES);
+            face.setChangedEventListener(this);
         } else {
             face = Utils.Faces.getInstance().getFace(id);
             setImageBitmap(face.getProcessedBitmap());
+            face.setChangedEventListener(this);
             if (face.getState() == Face.ProcessState.PROCESSED)
                 setEditState(EditState.PROCESSED);
             else
@@ -109,13 +121,12 @@ public class FaceView extends ImageView implements View.OnTouchListener {
 
     public void processFace() {
         face.process();
-        setImageBitmap(face.getProcessedBitmap());
         invalidate();
     }
 
     public void setBrightness(int b) {
         face.setBrightness(b / 100.f);
-        setImageBitmap(face.getProcessedBitmap());
+        invalidate();
     }
     public int getBrightness() {
         return Math.round(face.getBrightness() * 100);
@@ -258,7 +269,6 @@ public class FaceView extends ImageView implements View.OnTouchListener {
             eraserLayer = null;
         }
         face.setOverlay(Face.ERASER_OVERLAY, eraserBitmap);
-        setImageBitmap(face.getProcessedBitmap());
     }
 
     private Face face;

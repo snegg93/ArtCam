@@ -38,6 +38,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
 	public void onExitClick(View v) {
 		finish();
 	}
+
+    public void onSettingsClick(View v) {
+        ;
+    }
 	
 	public void onFaceCollectionClick(View v) {
 		startActivity(new Intent(this, FaceCollection.class));

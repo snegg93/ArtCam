@@ -2,6 +2,9 @@ package org.artcam.android;
 
 
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -37,8 +40,25 @@ public class Utils {
         session = s;
     }
 
+
     public static float getDistance(PointF first, PointF second) {
         return (float) Math.sqrt(Math.pow(first.x - second.x, 2) + Math.pow(first.y - second.y, 2));
+    }
+
+    public static void notification(Context c) {
+        Notification.Builder builder = new Notification.Builder(c);
+        builder.setSmallIcon(R.drawable.ic_launcher);
+        builder.setContentTitle("Title");
+        builder.setContentText("Notification!");
+        Intent resultIntent = new Intent(c, c.getClass());
+        PendingIntent resultPending = PendingIntent.getActivity(c, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(resultPending);
+        ((NotificationManager)c.getSystemService(Context.NOTIFICATION_SERVICE)).notify(1, builder.getNotification());
+    }
+
+    public static interface FaceChangedEventListened {
+        public  void onProcessedChanged();
+        public void onDressedChanged();
     }
 
     public static class Faces {
@@ -178,6 +198,7 @@ public class Utils {
 
         public void onConnected(Bundle connectionHint) {
             Toast.makeText(activity, "Signed in Google+ with " + Plus.AccountApi.getAccountName(googleApiClient), Toast.LENGTH_SHORT).show();
+            Utils.notification(activity);
             needResolution = false;
         }
 
