@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.*;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -58,7 +59,6 @@ public class Utils {
 
     public static interface FaceChangedEventListened {
         public  void onProcessedChanged();
-        public void onDressedChanged();
     }
 
     public static class Faces {
@@ -204,6 +204,153 @@ public class Utils {
 
         public void onConnectionSuspended(int cause) {
             googleApiClient.connect();
+        }
+    }
+
+    public static interface EditTool {
+        public boolean motionEvent( MotionEvent ev );
+        public void paint(Canvas c, Matrix imageMatrix);
+        public void userAction(int actionId, int param);
+        public int getUserParam(int actionId);
+        public Bitmap getOverlay();
+        public void setOverlay(Bitmap bmp);
+        public int getOverlayID();
+        public void setMatrix(Matrix matrix);
+        public void recycle();
+    }
+
+    public static class EraserTool implements EditTool {
+
+        public static final int USER_ACTION_UNDO = 0;
+        public static final int USER_ACTION_APPLY = 1;
+        public static final int USER_ACTION_SETSIZE = 2;
+
+
+        private Bitmap eraserLayer;
+        private Canvas eraserCanvas;
+        private Paint eraserPaint;
+        private int eraserSize;
+        private Matrix m;
+
+        private Bitmap overlayBitmap;
+
+        public EraserTool() {
+            eraserPaint = new Paint();
+        }
+
+        @Override
+        public boolean motionEvent(MotionEvent ev) {
+            if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                if (eraserLayer != null && !eraserLayer.isRecycled()) {
+                    eraserCanvas = new Canvas(overlayBitmap);
+                    eraserCanvas.drawBitmap(eraserLayer, 0, 0, null);
+                    eraserLayer.recycle();
+                    eraserLayer = null;
+                }
+                eraserLayer = Bitmap.createBitmap(overlayBitmap.getWidth(), overlayBitmap.getHeight(), Bitmap.Config.ARGB_8888);
+                eraserCanvas = new Canvas(eraserLayer);
+                eraserPaint = new Paint();
+                eraserPaint.setColor(Color.WHITE);
+                eraserPaint.setStrokeWidth(eraserSize);
+                eraserPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+                eraserPaint.setStrokeCap(Paint.Cap.ROUND);
+                return true;
+            } else if (ev.getActionMasked() == MotionEvent.ACTION_MOVE) {
+                float[] pts = new float[4];
+                pts[0] = ev.getX();
+                pts[1] = ev.getY();
+                if (ev.getHistorySize() != 0) {
+                    pts[2] = ev.getHistoricalX(0);
+                    pts[3] = ev.getHistoricalY(0);
+                }else {
+                    pts[2] = pts[0];
+                    pts[3] = pts[1];
+                }
+                m.mapPoints(pts);
+                eraserCanvas.drawLine(pts[2], pts[3], pts[0], pts[1], eraserPaint);
+                return false;
+            } else if (ev.getActionMasked() == MotionEvent.ACTION_UP) {
+                return false;
+            }
+            return false;
+        }
+
+        @Override
+        public void paint(Canvas c, Matrix imageMatrix) {
+            if (eraserLayer != null && !eraserLayer.isRecycled())
+                c.drawBitmap(eraserLayer, imageMatrix, eraserPaint);
+            if (overlayBitmap != null && !overlayBitmap.isRecycled())
+                c.drawBitmap(overlayBitmap, imageMatrix, eraserPaint);
+        }
+
+        public void undoEraser() {
+            if (eraserLayer != null && !eraserLayer.isRecycled()) {
+                eraserLayer.recycle();
+                eraserLayer = null;
+            }
+        }
+        public void applyEraser() {
+            if (eraserLayer != null && !eraserLayer.isRecycled()) {
+                eraserCanvas = new Canvas(overlayBitmap);
+                eraserCanvas.drawBitmap(eraserLayer, 0, 0, null);
+                eraserLayer.recycle();
+                eraserLayer = null;
+            }
+        }
+
+        @Override
+        public void userAction(int actionId, int param) {
+            switch (actionId) {
+                case USER_ACTION_APPLY:
+                    applyEraser();
+                    break;
+                case USER_ACTION_UNDO:
+                    undoEraser();
+                    break;
+                case USER_ACTION_SETSIZE:
+                    eraserSize = param;
+                    if (eraserPaint != null)
+                        eraserPaint.setStrokeWidth(param);
+            }
+        }
+
+        @Override
+        public int getUserParam(int actionId) {
+            switch (actionId) {
+                case USER_ACTION_SETSIZE:
+                    return eraserSize;
+                default:
+                    return 0;
+            }
+        }
+
+        @Override
+        public Bitmap getOverlay() {
+            return overlayBitmap;
+        }
+
+        @Override
+        public void setOverlay(Bitmap bmp) {
+            overlayBitmap = bmp.copy(Bitmap.Config.ARGB_8888, true);
+            eraserLayer = Bitmap.createBitmap(bmp.getWidth(), bmp.getHeight(), bmp.getConfig());
+        }
+
+        @Override
+        public int getOverlayID() {
+            return Face.ERASER_OVERLAY;
+        }
+
+        @Override
+        public void setMatrix(Matrix matrix) {
+            m = matrix;
+        }
+
+        @Override
+        public void recycle() {
+            if (eraserLayer != null)
+                eraserLayer.recycle();
+            if (overlayBitmap != null)
+                overlayBitmap.recycle();
         }
     }
 }

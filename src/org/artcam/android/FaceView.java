@@ -14,12 +14,7 @@ public class FaceView extends ImageView implements View.OnTouchListener, Utils.F
         setImageBitmap(face.getProcessedBitmap());
     }
 
-    @Override
-    public void onDressedChanged() {
-
-    }
-
-    public static enum EditState {EYES, PROCESSED, ERASER}
+    public static enum ToolState {SCALE, ERASER, HAT, EYEBROW, MOUTH}
 
     public FaceView(Context c) {
         super(c);
@@ -31,7 +26,6 @@ public class FaceView extends ImageView implements View.OnTouchListener, Utils.F
         paint.setStyle(Paint.Style.STROKE);
         setScaleType(ScaleType.FIT_START);
         m = new Matrix();
-        bmp = BitmapFactory.decodeResource(getResources(), R.drawable.eyes);
     }
 
     public void setFaceBitmap(Bitmap bmp) {
@@ -39,37 +33,32 @@ public class FaceView extends ImageView implements View.OnTouchListener, Utils.F
         setImageBitmap(face.getOrigBitmap());
     }
 
-    public void setEditState(EditState st) {
-        if (st == EditState.ERASER) {
-            if (face.getOverlay(Face.ERASER_OVERLAY) != null)
-                eraserBitmap = face.getOverlay(Face.ERASER_OVERLAY).copy(Bitmap.Config.ARGB_8888, true);
-            else
-                eraserBitmap = Bitmap.createBitmap(face.getProcessedBitmap().getWidth(), face.getProcessedBitmap().getHeight(), Bitmap.Config.ARGB_8888);
-        } else {
-            if (eraserBitmap != null && !eraserBitmap.isRecycled()) {
-                eraserBitmap.recycle();
-                eraserBitmap = null;
-            }
-            if (eraserLayer != null && !eraserLayer.isRecycled()) {
-                eraserLayer.recycle();
-                eraserLayer = null;
-            }
+    public void setEditState(ToolState st) {
+        if ((st != state) && currentTool != null) {
+            face.setOverlay(currentTool.getOverlayID(), currentTool.getOverlay());
+            currentTool.recycle();
         }
+        if (st == ToolState.ERASER) {
+            currentTool = new Utils.EraserTool();
+        }
+        if (face.getOverlay(currentTool.getOverlayID()) != null)
+            currentTool.setOverlay(face.getOverlay(currentTool.getOverlayID()).copy(Bitmap.Config.ARGB_8888, true));
+        else
+            currentTool.setOverlay(Bitmap.createBitmap(face.getProcessedBitmap().getWidth(), face.getProcessedBitmap().getHeight(), Bitmap.Config.ARGB_8888));
         state = st;
         setImageBitmap(face.getProcessedBitmap());
         invalidate();
     }
-    public EditState getEditState() {
+    public ToolState getEditState() {
         return state;
     }
 
     public void setEraserSize(int size) {
-        eraserSize = size;
-        if (eraserPaint != null)
-            eraserPaint.setStrokeWidth(size);
+        if (state == ToolState.ERASER)
+            currentTool.userAction(Utils.EraserTool.USER_ACTION_SETSIZE, size);
     }
     public int getEraserSize() {
-        return eraserSize;
+        return currentTool.getUserParam(Utils.EraserTool.USER_ACTION_SETSIZE);
     }
 
     public void setFaceId(int id) {
@@ -77,16 +66,14 @@ public class FaceView extends ImageView implements View.OnTouchListener, Utils.F
             face = Utils.FaceFactory.create();
             Utils.Faces.getInstance().addFace(face);
             setFaceBitmap(Bitmap.createBitmap(0, 0, Bitmap.Config.ARGB_8888));
-            setEditState(EditState.EYES);
+            setEditState(ToolState.SCALE);
             face.setChangedEventListener(this);
         } else {
             face = Utils.Faces.getInstance().getFace(id);
             setImageBitmap(face.getProcessedBitmap());
             face.setChangedEventListener(this);
             if (face.getState() == Face.ProcessState.PROCESSED)
-                setEditState(EditState.PROCESSED);
-            else
-                setEditState(EditState.EYES);
+                setEditState(ToolState.SCALE);
         }
     }
 
@@ -99,24 +86,8 @@ public class FaceView extends ImageView implements View.OnTouchListener, Utils.F
     @Override
     public void onDraw(Canvas c) {
         super.onDraw(c);
-        if (state == EditState.EYES) {
-            c.save();
-            Matrix m = getImageMatrix();
-            PointF temp = face.getEyeLPoint(m);
-            Point p = new Point(Math.round(temp.x), Math.round(temp.y));
-            c.drawBitmap(bmp, new Rect(0, 0, 24, 24), new Rect(p.x - 12, p.y - 12, p.x + 12, p.y + 12), null);
-            temp = face.getEyeRPoint(m);
-            p = new Point(Math.round(temp.x), Math.round(temp.y));
-            c.drawBitmap(bmp, new Rect(24, 0, 48, 24), new Rect(p.x - 12, p.y - 12, p.x + 12, p.y + 12), null);
-            temp = face.getMouthPoint(m);
-            p = new Point(Math.round(temp.x), Math.round(temp.y));
-            c.drawBitmap(bmp, new Rect(0, 24, 48, 48), new Rect(p.x - 24, p.y - 12, p.x + 24, p.y + 12), null);
-            c.restore();
-        }
-        if (eraserLayer != null && !eraserLayer.isRecycled())
-            c.drawBitmap(eraserLayer, getImageMatrix(), eraserPaint);
-        if (eraserBitmap != null && !eraserBitmap.isRecycled())
-            c.drawBitmap(eraserBitmap, getImageMatrix(), eraserPaint);
+        if (currentTool != null)
+            currentTool.paint(c, getImageMatrix());
     }
 
     public void processFace() {
@@ -137,14 +108,8 @@ public class FaceView extends ImageView implements View.OnTouchListener, Utils.F
             return false;
         if (m.isIdentity())
             getImageMatrix().invert(m);
-        switch (state) {
-            case EYES:
-                return moveEyes(ev);
-            case ERASER:
-                return eraser(ev);
-            default:
-                return false;
-        }
+        currentTool.setMatrix(m);
+        return currentTool.motionEvent(ev);
     }
 
     private boolean moveEyes(MotionEvent ev) {
@@ -215,71 +180,21 @@ public class FaceView extends ImageView implements View.OnTouchListener, Utils.F
         return false;
     }
 
-
-    private boolean eraser(MotionEvent ev) {
-        if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
-            if (eraserLayer != null && !eraserLayer.isRecycled()) {
-                eraserCanvas = new Canvas(eraserBitmap);
-                eraserCanvas.drawBitmap(eraserLayer, 0, 0, null);
-                eraserLayer.recycle();
-                eraserLayer = null;
-            }
-            eraserLayer = Bitmap.createBitmap(face.getProcessedBitmap().getWidth(), face.getProcessedBitmap().getHeight(), Bitmap.Config.ARGB_8888);
-            eraserCanvas = new Canvas(eraserLayer);
-            eraserPaint = new Paint();
-            eraserPaint.setColor(Color.WHITE);
-            eraserPaint.setStrokeWidth(eraserSize);
-            eraserPaint.setStyle(Paint.Style.FILL_AND_STROKE);
-            eraserPaint.setStrokeCap(Paint.Cap.ROUND);
-            return true;
-        } else if (ev.getActionMasked() == MotionEvent.ACTION_MOVE) {
-            float[] pts = new float[4];
-            pts[0] = ev.getX();
-            pts[1] = ev.getY();
-            if (ev.getHistorySize() != 0) {
-                pts[2] = ev.getHistoricalX(0);
-                pts[3] = ev.getHistoricalY(0);
-            }else {
-                pts[2] = pts[0];
-                pts[3] = pts[1];
-            }
-            m.mapPoints(pts);
-            eraserCanvas.drawLine(pts[2], pts[3], pts[0], pts[1], eraserPaint);
-            invalidate();
-            return false;
-        } else if (ev.getActionMasked() == MotionEvent.ACTION_UP) {
-            invalidate();
-            return false;
-        }
-        return false;
+    public void applyEraser() {
+        if (state == ToolState.ERASER)
+            currentTool.userAction(Utils.EraserTool.USER_ACTION_APPLY, 0);
     }
 
     public void undoEraser() {
-        if (eraserLayer != null && !eraserLayer.isRecycled()) {
-            eraserLayer.recycle();
-            eraserLayer = null;
-        }
-        invalidate();
+        if (state == ToolState.ERASER)
+            currentTool.userAction(Utils.EraserTool.USER_ACTION_UNDO, 0);
     }
-    public void applyEraser() {
-        if (eraserLayer != null && !eraserLayer.isRecycled()) {
-            eraserCanvas = new Canvas(eraserBitmap);
-            eraserCanvas.drawBitmap(eraserLayer, 0, 0, null);
-            eraserLayer.recycle();
-            eraserLayer = null;
-        }
-        face.setOverlay(Face.ERASER_OVERLAY, eraserBitmap);
-    }
+
 
     private Face face;
     private int action;
     private Paint paint;
     private Matrix m;
-    private Bitmap bmp;
-    private Bitmap eraserLayer;
-    private Bitmap eraserBitmap;
-    private Canvas eraserCanvas;
-    private Paint eraserPaint;
-    private int eraserSize;
-    private EditState state;
+    private ToolState state;
+    private Utils.EditTool currentTool;
 }

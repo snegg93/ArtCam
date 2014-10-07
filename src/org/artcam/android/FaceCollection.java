@@ -151,11 +151,6 @@ public class FaceCollection extends Activity {
         public void onProcessedChanged() {
             setImageBitmap(Utils.Faces.getInstance().getFace(id).getProcessedBitmap());
         }
-
-        @Override
-        public void onDressedChanged() {
-
-        }
     }
 	
 	public class DetectFace extends AsyncTask<String, Void, Void> {
