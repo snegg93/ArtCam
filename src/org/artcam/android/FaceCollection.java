@@ -80,11 +80,6 @@ public class FaceCollection extends Activity {
 	}
 
 	public void addFace() {
-		img = new FaceImageView(this);
-		img.setLayoutParams(new LayoutParams(100, 100));
-		LinearLayout l = (LinearLayout)findViewById(R.id.placementLayout);
-        img.setScaleType(ScaleType.FIT_START);
-		l.addView(img);
 		File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
 	              Environment.DIRECTORY_PICTURES), "ArtCam");
 	    if (! mediaStorageDir.exists()){
@@ -93,30 +88,37 @@ public class FaceCollection extends Activity {
 	            return;
 	        }
 	    }
+        img = new FaceImageView(this);
+        img.setLayoutParams(new LayoutParams(100, 100));
+        LinearLayout l = (LinearLayout)findViewById(R.id.placementLayout);
+        img.setScaleType(ScaleType.FIT_START);
+        l.addView(img);
 	    File f = new File(mediaStorageDir.getPath() + File.separator + "IMG_.jpg");
         Face face = Utils.FaceFactory.create();
         img.id = Utils.Faces.getInstance().addFace(face);
+        face.setChangedEventListener(img);
         face.setOrigBitmap(BitmapFactory.decodeFile(f.getAbsolutePath()));
         img.setImageBitmap(face.getOrigBitmap());
 	}
 
     @Override
-    public void onResume() {
-        super.onResume();
-        Utils.Faces f = Utils.Faces.getInstance();
-        LinearLayout l = (LinearLayout)findViewById(R.id.placementLayout);
-        l.removeAllViews();
+        public void onResume() {
+            super.onResume();
+            Utils.Faces f = Utils.Faces.getInstance();
+            LinearLayout l = (LinearLayout)findViewById(R.id.placementLayout);
+            l.removeAllViews();
 
-        for (int i = 0; i < f.getCount(); ++i)
-        {
-            img = new FaceImageView(this);
-            img.setLayoutParams(new LayoutParams(100, 100));
-            img.setScaleType(ScaleType.FIT_START);
-            img.setImageBitmap(f.getFace(i).getProcessedBitmap());
-            img.id = i;
+            for (int i = 0; i < f.getCount(); ++i)
+            {
+                img = new FaceImageView(this);
+                img.setLayoutParams(new LayoutParams(100, 100));
+                img.setScaleType(ScaleType.FIT_START);
+                img.setImageBitmap(f.getFace(i).getProcessedBitmap());
+                img.id = i;
+                f.getFace(i).setChangedEventListener(img);
 
-            l.addView(img);
-        }
+                l.addView(img);
+            }
     }
 
     @Override
@@ -127,7 +129,7 @@ public class FaceCollection extends Activity {
     }
 	
 	
-	public class FaceImageView extends ImageView implements OnTouchListener  {
+	public class FaceImageView extends ImageView implements OnTouchListener, Utils.FaceChangedEventListened {
 		public FaceImageView(Context c) {
 			super(c);
 			this.setOnTouchListener(this);
@@ -144,7 +146,17 @@ public class FaceCollection extends Activity {
 	    }
 		
 		public int id;
-	}
+
+        @Override
+        public void onProcessedChanged() {
+            setImageBitmap(Utils.Faces.getInstance().getFace(id).getProcessedBitmap());
+        }
+
+        @Override
+        public void onDressedChanged() {
+
+        }
+    }
 	
 	public class DetectFace extends AsyncTask<String, Void, Void> {
 		@Override

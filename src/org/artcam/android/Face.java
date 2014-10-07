@@ -2,9 +2,13 @@ package org.artcam.android;
 
 import android.graphics.*;
 
+import java.util.Vector;
+
 public class Face {
 
     public enum ProcessState {CREATED, PROCESSED, DECORATED}
+    private static final int OVERLAYS_NUM = 1;
+    public static final int ERASER_OVERLAY = 0;
 
     public Face(Bitmap bmp, PointF eyePoint1, PointF eyePoint2, PointF mPoint) {
         setOrigBitmap(bmp);
@@ -12,9 +16,11 @@ public class Face {
         eyeRPoint = eyePoint2;
         mouthPoint = mPoint;
         state = ProcessState.CREATED;
-        processedChanged = false;
         processedBitmap = null;
         brightness = 0.8f;
+        overlays = new Vector<>();
+        for (int i = 0; i < OVERLAYS_NUM; ++i)
+            overlays.add(null);
     }
 
 
@@ -133,7 +139,7 @@ public class Face {
         setEyeRPoint(new PointF((float)(eyeRPoint.x * cosx - eyeRPoint.y * sinx),(float)( eyeRPoint.x * sinx + eyeRPoint.y * cosx)));
         setMouthPoint(new PointF((float) (mouthPoint.x * cosx - mouthPoint.y * sinx), (float) (mouthPoint.x * sinx + mouthPoint.y * cosx)));
 
-        processedChanged = true;
+        changeProcess();
         getProcessedBitmap();
         state = ProcessState.PROCESSED;
     }
@@ -149,41 +155,52 @@ public class Face {
     public Bitmap getProcessedBitmap() {
         if (state == ProcessState.CREATED)
             return origBitmap;
-        if (processedBitmap != null && !processedChanged)
+        if (processedBitmap != null)
             return processedBitmap;
-        else {
-            if (processedBitmap == null)
-                processedBitmap = Bitmap.createBitmap(Math.round(faceRect.width()), Math.round(faceRect.height()), Bitmap.Config.ARGB_8888);
-            Canvas c = new Canvas(processedBitmap);
-            Paint paint = new Paint();
-            paint.setColor(0xFFFFFF00);
-            c.drawRect(0, 0, processedBitmap.getWidth(), processedBitmap.getHeight(), paint);
-
-            c.save();
-
-            c.translate(faceRect.left, faceRect.top);
-            c.rotate(angle, Math.abs(faceRect.left), Math.abs(faceRect.top));
-
-
-            colorMatrix = new float[] {
-                    brightness, brightness, brightness, 0, 0,
-                    brightness, brightness, brightness, 0, 0,
-                    brightness, brightness, brightness, 0, 0,
-                    0, 0, 0, 1, 0
-            };
-
-            paint.setColorFilter(new ColorMatrixColorFilter(colorMatrix));
-            c.drawBitmap(origBitmap, 0, 0, paint);
-            c.restore();
-            processedChanged = false;
-            return processedBitmap;
-        }
+        return null;
     }
 
     public void setBrightness(float b) {
         brightness = b;
-        processedChanged = true;
+        changeProcess();
     }
+
+    private void changeProcess() {
+        if (processedBitmap == null)
+            processedBitmap = Bitmap.createBitmap(Math.round(faceRect.width()), Math.round(faceRect.height()), Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(processedBitmap);
+        Paint paint = new Paint();
+        paint.setColor(0xFFFFFF00);
+        c.drawRect(0, 0, processedBitmap.getWidth(), processedBitmap.getHeight(), paint);
+
+        c.save();
+
+        c.translate(faceRect.left, faceRect.top);
+        c.rotate(angle, Math.abs(faceRect.left), Math.abs(faceRect.top));
+
+
+        colorMatrix = new float[] {
+                brightness, brightness, brightness, 0, 0,
+                brightness, brightness, brightness, 0, 0,
+                brightness, brightness, brightness, 0, 0,
+                0, 0, 0, 1, 0
+        };
+
+        paint.setColorFilter(new ColorMatrixColorFilter(colorMatrix));
+        c.drawBitmap(origBitmap, 0, 0, paint);
+        c.restore();
+        for (int i = 0; i < overlays.size(); ++i) {
+            if (overlays.elementAt(i) != null && !overlays.elementAt(i).isRecycled())
+                c.drawBitmap(overlays.elementAt(i), 0, 0, paint);
+        }
+        if (evListener != null)
+            evListener.onProcessedChanged();
+    }
+
+    public void setChangedEventListener( Utils.FaceChangedEventListened listener ) {
+        evListener = listener;
+    }
+
     public float getBrightness() {
         return brightness;
     }
@@ -192,12 +209,28 @@ public class Face {
         return state;
     }
 
+    public void setOverlay(int num, Bitmap bmp) {
+        if (num < overlays.size()) {
+            if (overlays.elementAt(num) != null && !overlays.elementAt(num).isRecycled()) {
+                overlays.elementAt(num).recycle();
+                overlays.setElementAt(null, num);
+            }
+            overlays.setElementAt(bmp.copy(Bitmap.Config.ARGB_8888, false), num);
+            changeProcess();
+        }
+    }
+
+    public Bitmap getOverlay(int num) {
+        return overlays.elementAt(num);
+    }
+
     private Bitmap origBitmap, processedBitmap;
     private RectF faceRect;
     private PointF eyeLPoint, eyeRPoint, mouthPoint;
     private ProcessState state;
     private float colorMatrix[];
-    private boolean processedChanged;
     private float angle;
     private float brightness;
+    private Vector<Bitmap> overlays;
+    private Utils.FaceChangedEventListened evListener;
 }

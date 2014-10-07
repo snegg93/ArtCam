@@ -7,7 +7,20 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 
-public class FaceView extends ImageView implements View.OnTouchListener {
+public class FaceView extends ImageView implements View.OnTouchListener, Utils.FaceChangedEventListened {
+
+    @Override
+    public void onProcessedChanged() {
+        setImageBitmap(face.getProcessedBitmap());
+    }
+
+    @Override
+    public void onDressedChanged() {
+
+    }
+
+    public static enum EditState {EYES, PROCESSED, ERASER}
+
     public FaceView(Context c) {
         super(c);
         action = -1;
@@ -26,21 +39,67 @@ public class FaceView extends ImageView implements View.OnTouchListener {
         setImageBitmap(face.getOrigBitmap());
     }
 
+    public void setEditState(EditState st) {
+        if (st == EditState.ERASER) {
+            if (face.getOverlay(Face.ERASER_OVERLAY) != null)
+                eraserBitmap = face.getOverlay(Face.ERASER_OVERLAY).copy(Bitmap.Config.ARGB_8888, true);
+            else
+                eraserBitmap = Bitmap.createBitmap(face.getProcessedBitmap().getWidth(), face.getProcessedBitmap().getHeight(), Bitmap.Config.ARGB_8888);
+        } else {
+            if (eraserBitmap != null && !eraserBitmap.isRecycled()) {
+                eraserBitmap.recycle();
+                eraserBitmap = null;
+            }
+            if (eraserLayer != null && !eraserLayer.isRecycled()) {
+                eraserLayer.recycle();
+                eraserLayer = null;
+            }
+        }
+        state = st;
+        setImageBitmap(face.getProcessedBitmap());
+        invalidate();
+    }
+    public EditState getEditState() {
+        return state;
+    }
+
+    public void setEraserSize(int size) {
+        eraserSize = size;
+        if (eraserPaint != null)
+            eraserPaint.setStrokeWidth(size);
+    }
+    public int getEraserSize() {
+        return eraserSize;
+    }
+
     public void setFaceId(int id) {
         if (id < 0 || Utils.Faces.getInstance().getFace(id) == null) {
             face = Utils.FaceFactory.create();
             Utils.Faces.getInstance().addFace(face);
             setFaceBitmap(Bitmap.createBitmap(0, 0, Bitmap.Config.ARGB_8888));
+            setEditState(EditState.EYES);
+            face.setChangedEventListener(this);
         } else {
             face = Utils.Faces.getInstance().getFace(id);
             setImageBitmap(face.getProcessedBitmap());
+            face.setChangedEventListener(this);
+            if (face.getState() == Face.ProcessState.PROCESSED)
+                setEditState(EditState.PROCESSED);
+            else
+                setEditState(EditState.EYES);
         }
     }
 
     @Override
+    public void setImageBitmap(Bitmap bmp) {
+        super.setImageBitmap(bmp);
+        getImageMatrix().invert(m);
+    }
+
+    @Override
     public void onDraw(Canvas c) {
-        if (face.getState() == Face.ProcessState.CREATED) {
-            super.onDraw(c);
+        super.onDraw(c);
+        if (state == EditState.EYES) {
             c.save();
             Matrix m = getImageMatrix();
             PointF temp = face.getEyeLPoint(m);
@@ -53,19 +112,21 @@ public class FaceView extends ImageView implements View.OnTouchListener {
             p = new Point(Math.round(temp.x), Math.round(temp.y));
             c.drawBitmap(bmp, new Rect(0, 24, 48, 48), new Rect(p.x - 24, p.y - 12, p.x + 24, p.y + 12), null);
             c.restore();
-        } else if (face.getState() == Face.ProcessState.PROCESSED) {
-            super.onDraw(c);
         }
+        if (eraserLayer != null && !eraserLayer.isRecycled())
+            c.drawBitmap(eraserLayer, getImageMatrix(), eraserPaint);
+        if (eraserBitmap != null && !eraserBitmap.isRecycled())
+            c.drawBitmap(eraserBitmap, getImageMatrix(), eraserPaint);
     }
 
     public void processFace() {
         face.process();
-        setImageBitmap(face.getProcessedBitmap());
+        invalidate();
     }
 
     public void setBrightness(int b) {
         face.setBrightness(b / 100.f);
-        setImageBitmap(face.getProcessedBitmap());
+        invalidate();
     }
     public int getBrightness() {
         return Math.round(face.getBrightness() * 100);
@@ -76,6 +137,17 @@ public class FaceView extends ImageView implements View.OnTouchListener {
             return false;
         if (m.isIdentity())
             getImageMatrix().invert(m);
+        switch (state) {
+            case EYES:
+                return moveEyes(ev);
+            case ERASER:
+                return eraser(ev);
+            default:
+                return false;
+        }
+    }
+
+    private boolean moveEyes(MotionEvent ev) {
         float[] pts = new float[2];
         pts[0] = ev.getX();
         pts[1] = ev.getY();
@@ -143,9 +215,71 @@ public class FaceView extends ImageView implements View.OnTouchListener {
         return false;
     }
 
+
+    private boolean eraser(MotionEvent ev) {
+        if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            if (eraserLayer != null && !eraserLayer.isRecycled()) {
+                eraserCanvas = new Canvas(eraserBitmap);
+                eraserCanvas.drawBitmap(eraserLayer, 0, 0, null);
+                eraserLayer.recycle();
+                eraserLayer = null;
+            }
+            eraserLayer = Bitmap.createBitmap(face.getProcessedBitmap().getWidth(), face.getProcessedBitmap().getHeight(), Bitmap.Config.ARGB_8888);
+            eraserCanvas = new Canvas(eraserLayer);
+            eraserPaint = new Paint();
+            eraserPaint.setColor(Color.WHITE);
+            eraserPaint.setStrokeWidth(eraserSize);
+            eraserPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+            eraserPaint.setStrokeCap(Paint.Cap.ROUND);
+            return true;
+        } else if (ev.getActionMasked() == MotionEvent.ACTION_MOVE) {
+            float[] pts = new float[4];
+            pts[0] = ev.getX();
+            pts[1] = ev.getY();
+            if (ev.getHistorySize() != 0) {
+                pts[2] = ev.getHistoricalX(0);
+                pts[3] = ev.getHistoricalY(0);
+            }else {
+                pts[2] = pts[0];
+                pts[3] = pts[1];
+            }
+            m.mapPoints(pts);
+            eraserCanvas.drawLine(pts[2], pts[3], pts[0], pts[1], eraserPaint);
+            invalidate();
+            return false;
+        } else if (ev.getActionMasked() == MotionEvent.ACTION_UP) {
+            invalidate();
+            return false;
+        }
+        return false;
+    }
+
+    public void undoEraser() {
+        if (eraserLayer != null && !eraserLayer.isRecycled()) {
+            eraserLayer.recycle();
+            eraserLayer = null;
+        }
+        invalidate();
+    }
+    public void applyEraser() {
+        if (eraserLayer != null && !eraserLayer.isRecycled()) {
+            eraserCanvas = new Canvas(eraserBitmap);
+            eraserCanvas.drawBitmap(eraserLayer, 0, 0, null);
+            eraserLayer.recycle();
+            eraserLayer = null;
+        }
+        face.setOverlay(Face.ERASER_OVERLAY, eraserBitmap);
+    }
+
     private Face face;
     private int action;
     private Paint paint;
     private Matrix m;
     private Bitmap bmp;
+    private Bitmap eraserLayer;
+    private Bitmap eraserBitmap;
+    private Canvas eraserCanvas;
+    private Paint eraserPaint;
+    private int eraserSize;
+    private EditState state;
 }
