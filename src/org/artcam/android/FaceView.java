@@ -58,7 +58,10 @@ public class FaceView extends ImageView implements View.OnTouchListener, Utils.F
             currentTool.userAction(Utils.EraserTool.USER_ACTION_SETSIZE, size);
     }
     public int getEraserSize() {
-        return currentTool.getUserParam(Utils.EraserTool.USER_ACTION_SETSIZE);
+        if (currentTool!= null && currentTool.getOverlayID() == Face.ERASER_OVERLAY)
+            return currentTool.getUserParam(Utils.EraserTool.USER_ACTION_SETSIZE);
+        else
+            return 0;
     }
 
     public void setFaceId(int id) {
@@ -106,10 +109,13 @@ public class FaceView extends ImageView implements View.OnTouchListener, Utils.F
     public boolean onTouch(View view, MotionEvent ev) {
         if (view != this)
             return false;
-        if (m.isIdentity())
-            getImageMatrix().invert(m);
-        currentTool.setMatrix(m);
-        return currentTool.motionEvent(ev);
+        if (currentTool!= null) {
+            if (m.isIdentity())
+                getImageMatrix().invert(m);
+            currentTool.setMatrix(m);
+            return currentTool.motionEvent(ev);
+        }
+        return false;
     }
 
     private boolean moveEyes(MotionEvent ev) {
